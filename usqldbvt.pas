@@ -35,11 +35,26 @@ type
   { TSQLTable }
 
   TSQLTable = class(TSQLiteVirtualTable)
+  private
+    FConn: TSQLConnector;
   public
     function Prepare(var Prepared: TSQLVirtualTablePrepared): Boolean; override;
     function GetName: string; override;
     function CursorClass: TSQLiteVirtualTableCursorClass; override;
+    {arguments:
+      1. create table statement -> will ensure that table is there on remote database and have the right structure (fields are added when needed)
+      1. select from staement -> will be able to make an read-only table from every possible select statement
+      1. tablename -> greates an r/w table with same structure as it is in external database
+
+      2. type
+      3. host
+      4. databasename
+      5. username
+      6. password
+      7. properties
+    }
     function GenerateStructure: string; override;
+    destructor Destroy; override;
   end;
 
 implementation
@@ -81,17 +96,22 @@ begin
 end;
 
 function TSQLTable.GenerateStructure: string;
-const
-  Structure = 'create table fs ('+
-  'name  text,'+
-  'path  text,'+
-  'isdir int,'+
-  'size  int,'+
-  'date  date,'+
-  'content blob'+
-  ')';
 begin
-  Result := Structure;
+  FConn := TSQLConnector.Create(Self);
+  FConn.ConnectorType:=Arguments[1];
+  FConn.HostName:=Arguments[2];
+  FConn.DatabaseName:=Arguments[3];
+  FConn.UserName:=Arguments[4];
+  FConn.Password:=Arguments[5];
+  FConn.Open;
+  Result := 'CREATE TABLE SQLDB (';
+  Result += ')';
+end;
+
+destructor TSQLTable.Destroy;
+begin
+  FConn.Close;
+  inherited Destroy;
 end;
 
 function IncludeTrailingSlash(s : string) : string;

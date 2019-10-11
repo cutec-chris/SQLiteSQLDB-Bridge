@@ -8,7 +8,7 @@ unit laz_sqldbbridge;
 interface
 
 uses
-  usqldbvtfilesystem, LazarusPackageIntf;
+  usqldbvt, LazarusPackageIntf;
 
 implementation
 
